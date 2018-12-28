@@ -11,8 +11,52 @@ data class Chunk(val content: String, val location: Location, val add: Boolean, 
 
 class ParseException(val position: Position, message: String) : Exception(message)
 
+class ProcessException(message: String): java.lang.Exception(message)
 
-fun extractChunks(input: String): Result<Exception, Map<String, List<Chunk>>> {
+
+typealias Chunks =
+        Map<String, List<Chunk>>
+
+
+fun processChunks(chunk: Chunk, chunks: Chunks): Result<Exception, String> {
+    var text =
+            chunk.content
+
+    while (true) {
+        val startIndex =
+                text.indexOf("[=")
+
+        if (startIndex != -1) {
+            val endIndex =
+                    text.indexOf("]", startIndex)
+
+            if (endIndex != -1) {
+                val line =
+                        parseLine(Lexer(text.substring(startIndex + 2, endIndex)))
+
+                val chunkItems =
+                        chunks[line.name]
+
+                if (chunkItems == null) {
+                    throw ProcessException("Reference to unknown chunk ${line.name}")
+                } else {
+                    val separator =
+                            line.arguments.firstOrNull { it.name == "separator" }?.value ?: ""
+
+                    text = text.substring(0, startIndex) + chunkItems.map { it.content }.joinToString(separator) + text.substring(endIndex + 1)
+                }
+
+            } else {
+                return Okay(text)
+            }
+        } else {
+            return Okay(text)
+        }
+    }
+}
+
+
+fun extractChunks(input: String): Result<Exception, Chunks> {
     val lines =
             input.lines()
 
