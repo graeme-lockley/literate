@@ -19,7 +19,7 @@ class ExtractChunksTest : StringSpec({
                 "~~~~\n" +
                 "asdfasdfaf")
                 .shouldBe(Okay<Exception, Map<String, List<Chunk>>>(mapOf(
-                        Pair("Name", listOf(Chunk("Hello World", Location(Position(2, 0),  Position(4, 4)), false, emptyList())))
+                        Pair("Name", listOf(Chunk("Hello World", false, emptyList())))
                 )))
     }
 
@@ -32,7 +32,7 @@ class ExtractChunksTest : StringSpec({
                 "~~~~\n" +
                 "asdfasdfaf")
                 .shouldBe(Okay<Exception, Map<String, List<Chunk>>>(mapOf(
-                        Pair("Name", listOf(Chunk("Hello World", Location(Position(2, 0),  Position(4, 4)), true, emptyList())))
+                        Pair("Name", listOf(Chunk("Hello World", true, emptyList())))
                 )))
     }
 
@@ -45,7 +45,7 @@ class ExtractChunksTest : StringSpec({
                 "~~~~\n" +
                 "asdfasdfaf")
                 .shouldBe(Okay<Exception, Map<String, List<Chunk>>>(mapOf(
-                        Pair("Name", listOf(Chunk("Hello World", Location(Position(2, 0),  Position(4, 4)), true, listOf(
+                        Pair("Name", listOf(Chunk("Hello World", true, listOf(
                                 Argument("source", "File.sle"),
                                 Argument("weave", "false"),
                                 Argument("tangle", "true"),
@@ -67,8 +67,8 @@ class ExtractChunksTest : StringSpec({
                 "~~~~\n" +
                 "asdfasdfaf")
                 .shouldBe(Okay<Exception, Map<String, List<Chunk>>>(mapOf(
-                        Pair("NameA", listOf(Chunk("Hello World", Location(Position(2, 0),  Position(4, 4)), false, emptyList()))),
-                        Pair("NameB", listOf(Chunk("Bye bye love", Location(Position(6, 0),  Position(8, 4)), false, emptyList())))
+                        Pair("NameA", listOf(Chunk("Hello World", false, emptyList()))),
+                        Pair("NameB", listOf(Chunk("Bye bye love", false, emptyList())))
                 )))
     }
 
@@ -86,8 +86,8 @@ class ExtractChunksTest : StringSpec({
                 "asdfasdfaf")
                 .shouldBe(Okay<Exception, Map<String, List<Chunk>>>(mapOf(
                         Pair("Name", listOf(
-                                Chunk("Hello World", Location(Position(2, 0),  Position(4, 4)), false, emptyList()),
-                                Chunk("Bye bye love", Location(Position(6, 0),  Position(8, 4)), false, emptyList())))
+                                Chunk("Hello World", false, emptyList()),
+                                Chunk("Bye bye love", false, emptyList())))
                 )))
     }
 })

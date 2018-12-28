@@ -7,7 +7,7 @@ import io.kotlintest.specs.StringSpec
 
 class ProcessChunksTest : StringSpec({
     "Content without any chunk references" {
-        processChunks(Chunk("Hello world", homeLocation, false, emptyList()), emptyMap())
+        processChunks(Chunk("Hello world", false, emptyList()), emptyMap())
                 .shouldBe(Okay<Exception, String>("Hello world"))
     }
 
@@ -16,7 +16,7 @@ class ProcessChunksTest : StringSpec({
         val chunks =
                 mapOf(
                         Pair("Name", listOf(
-                                Chunk("this is the chunk text", homeLocation, false, emptyList()))))
+                                Chunk("this is the chunk text", false, emptyList()))))
 
         val content =
                 "Hello world\n" +
@@ -28,7 +28,7 @@ class ProcessChunksTest : StringSpec({
                         "this is the chunk text\n" +
                         "Bye bye love"
 
-        processChunks(Chunk(content, homeLocation, false, emptyList()), chunks)
+        processChunks(Chunk(content, false, emptyList()), chunks)
                 .shouldBe(Okay<Exception, String>(output))
     }
 
@@ -37,8 +37,8 @@ class ProcessChunksTest : StringSpec({
         val chunks =
                 mapOf(
                         Pair("Name", listOf(
-                                Chunk("ID1", homeLocation, false, emptyList()),
-                                Chunk("ID2", homeLocation, false, emptyList())
+                                Chunk("ID1", false, emptyList()),
+                                Chunk("ID2", false, emptyList())
                         )))
 
         val content =
@@ -51,7 +51,7 @@ class ProcessChunksTest : StringSpec({
                         "ID1ID2\n" +
                         "Bye bye love"
 
-        processChunks(Chunk(content, homeLocation, false, emptyList()), chunks)
+        processChunks(Chunk(content, false, emptyList()), chunks)
                 .shouldBe(Okay<Exception, String>(output))
     }
 
@@ -60,8 +60,8 @@ class ProcessChunksTest : StringSpec({
         val chunks =
                 mapOf(
                         Pair("Name", listOf(
-                                Chunk("ID1", homeLocation, false, emptyList()),
-                                Chunk("ID2", homeLocation, false, emptyList())
+                                Chunk("ID1", false, emptyList()),
+                                Chunk("ID2", false, emptyList())
                         )))
 
         val content =
@@ -74,7 +74,7 @@ class ProcessChunksTest : StringSpec({
                         "ID1, ID2\n" +
                         "Bye bye love"
 
-        processChunks(Chunk(content, homeLocation, false, emptyList()), chunks)
+        processChunks(Chunk(content, false, emptyList()), chunks)
                 .shouldBe(Okay<Exception, String>(output))
     }
 
@@ -83,7 +83,7 @@ class ProcessChunksTest : StringSpec({
         val chunks =
                 mapOf(
                         Pair("Name", listOf(
-                                Chunk("this is the chunk text", homeLocation, false, emptyList()))))
+                                Chunk("this is the chunk text", false, emptyList()))))
 
         val content =
                 "Hello world\n" +
@@ -91,7 +91,7 @@ class ProcessChunksTest : StringSpec({
                         "Bye bye love"
 
         shouldThrow<ProcessException> {
-            processChunks(Chunk(content, homeLocation, false, emptyList()), chunks)
+            processChunks(Chunk(content, false, emptyList()), chunks)
         }.message.shouldBe("Reference to unknown chunk Named")
     }
 })
