@@ -12,8 +12,6 @@ class SetupTest : StringSpec({
         val srcDirectory =
                 File("./src/test/resources")
 
-        println(srcDirectory.absolutePath)
-
         val configuration =
                 configure(File("./src/test/resources"))
 
