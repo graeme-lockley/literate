@@ -11,11 +11,14 @@ data class Chunk(val content: String, val location: Location, val add: Boolean, 
 
 class ParseException(val position: Position, message: String) : Exception(message)
 
-class ProcessException(message: String): java.lang.Exception(message)
+class ProcessException(message: String) : java.lang.Exception(message)
 
 
 typealias Chunks =
         Map<String, List<Chunk>>
+
+
+data class TranslateResult(val markdown: String, val items: List<Pair<String, String>>)
 
 
 fun processChunks(chunk: Chunk, chunks: Chunks): Result<Exception, String> {
@@ -56,19 +59,92 @@ fun processChunks(chunk: Chunk, chunks: Chunks): Result<Exception, String> {
 }
 
 
-fun extractChunks(input: String): Result<Exception, Chunks> {
-    val lines =
-            input.lines()
+fun extractChunks(input: String) =
+        extractChunks(input.lines())
 
-    val result =
-            mutableMapOf<String, List<Chunk>>()
+
+fun extractChunks(lines: List<String>): Result<Exception, Chunks> {
+    return parse(lines)
+            .map { root ->
+                var lp = 0
+
+                val result =
+                        mutableMapOf<String, List<Chunk>>()
+
+                var current: ALine? =
+                        root
+
+                fun nextLine() {
+                    lp += 1
+                    current = current!!.next
+                }
+
+                while (current != null) {
+                    if (current!!.state == LineState.ChunkStart) {
+                        val parseResult =
+                                current!!.argument!!
+
+                        val content =
+                                StringBuilder()
+
+                        val startLine =
+                                lp
+
+                        nextLine()
+
+                        while (current != null && current!!.state != LineState.ChunkEnd) {
+                            if (!content.isEmpty()) {
+                                content.append("\n")
+                            }
+                            content.append(current!!.content)
+                            nextLine()
+                        }
+
+                        val location =
+                                Location(Position(startLine, 0), Position(lp, current?.content?.length ?: 0))
+
+                        val currentChunk =
+                                result[parseResult.name]
+
+                        if (currentChunk == null)
+                            result[parseResult.name] =
+                                    listOf(Chunk(content.toString(), location, parseResult.additive, parseResult.arguments))
+                        else
+                            result[parseResult.name] =
+                                    currentChunk + Chunk(content.toString(), location, parseResult.additive, parseResult.arguments)
+
+                    } else {
+                        nextLine()
+                    }
+                }
+
+                result
+            }
+}
+
+fun parse(lines: List<String>): Result<Exception, ALine> {
+    var root: ALine? =
+            null
+
+    var current: ALine? =
+            null
+
+    fun addLine(line: ALine) {
+        if (root == null) {
+            root = line
+        }
+        if (current == null) {
+            current = null
+        } else {
+            current!!.next = line
+        }
+        current = line
+    }
+
 
     var lp = 0
     while (lp < lines.size) {
         if (lines[lp].startsWith("~~~")) {
-            val startLine =
-                    lp
-
             val line =
                     lines[lp].substring(3)
 
@@ -82,41 +158,30 @@ fun extractChunks(input: String): Result<Exception, Chunks> {
                         return Error(ParseException(Position(e.position.line + lp, e.position.column), e.message!!))
                     }
 
-            val content =
-                    StringBuilder()
+            addLine(ALine(null, lines[lp], LineState.ChunkStart, ChunkStartParameters(parseResult.name, parseResult.additive, parseResult.arguments)))
 
             lp += 1
             while (lp < lines.size && !lines[lp].startsWith("~~~")) {
-                if (!content.isEmpty()) {
-                    content.append("\n")
-                }
-                content.append(lines[lp])
+                addLine(ALine(null, lines[lp], LineState.InChunk, null))
                 lp += 1
             }
 
-            val location =
-                    Location(Position(startLine, 0), Position(lp, if (lp < lines.size) lines[lp].length else 0))
-
-            val currentChunk =
-                    result[parseResult.name]
-
-            if (currentChunk == null)
-                result[parseResult.name] =
-                        listOf(Chunk(content.toString(), location, parseResult.additive, parseResult.arguments))
-            else
-                result[parseResult.name] =
-                        currentChunk + Chunk(content.toString(), location, parseResult.additive, parseResult.arguments)
+            if (lp < lines.size) {
+                addLine(ALine(null, lines[lp], LineState.ChunkEnd, null))
+            }
 
             lp += 1
         } else {
+            addLine(ALine(null, lines[lp], LineState.Text, null))
             lp += 1
         }
     }
-    return Okay(result)
+
+    return Okay(root!!)
 }
 
 
-private data class Line(val additive: Boolean, val name: String, val arguments: List<Argument>)
+data class Line(val additive: Boolean, val name: String, val arguments: List<Argument>)
 
 
 /*
