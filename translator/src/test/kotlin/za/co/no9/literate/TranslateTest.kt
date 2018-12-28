@@ -19,7 +19,7 @@ class TranslateTest : StringSpec({
                 "~~~~\n" +
                 "asdfasdfaf")
                 .shouldBe(Okay<Exception, Map<String, List<Chunk>>>(mapOf(
-                        Pair("Name", listOf(Chunk("Hello World", false, emptyList())))
+                        Pair("Name", listOf(Chunk("Hello World", Location(Position(2, 0),  Position(4, 4)), false, emptyList())))
                 )))
     }
 
@@ -32,7 +32,7 @@ class TranslateTest : StringSpec({
                 "~~~~\n" +
                 "asdfasdfaf")
                 .shouldBe(Okay<Exception, Map<String, List<Chunk>>>(mapOf(
-                        Pair("Name", listOf(Chunk("Hello World", true, emptyList())))
+                        Pair("Name", listOf(Chunk("Hello World", Location(Position(2, 0),  Position(4, 4)), true, emptyList())))
                 )))
     }
 
@@ -49,8 +49,8 @@ class TranslateTest : StringSpec({
                 "~~~~\n" +
                 "asdfasdfaf")
                 .shouldBe(Okay<Exception, Map<String, List<Chunk>>>(mapOf(
-                        Pair("NameA", listOf(Chunk("Hello World", false, emptyList()))),
-                        Pair("NameB", listOf(Chunk("Bye bye love", false, emptyList())))
+                        Pair("NameA", listOf(Chunk("Hello World", Location(Position(2, 0),  Position(4, 4)), false, emptyList()))),
+                        Pair("NameB", listOf(Chunk("Bye bye love", Location(Position(6, 0),  Position(8, 4)), false, emptyList())))
                 )))
     }
 
@@ -68,8 +68,8 @@ class TranslateTest : StringSpec({
                 "asdfasdfaf")
                 .shouldBe(Okay<Exception, Map<String, List<Chunk>>>(mapOf(
                         Pair("Name", listOf(
-                                Chunk("Hello World", false, emptyList()),
-                                Chunk("Bye bye love", false, emptyList())))
+                                Chunk("Hello World", Location(Position(2, 0),  Position(4, 4)), false, emptyList()),
+                                Chunk("Bye bye love", Location(Position(6, 0),  Position(8, 4)), false, emptyList())))
                 )))
     }
 })

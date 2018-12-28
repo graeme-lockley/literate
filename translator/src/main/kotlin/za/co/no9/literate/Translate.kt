@@ -6,7 +6,7 @@ import java.io.StringWriter
 
 data class Argument(val name: String, val value: String)
 
-data class Chunk(val content: String, val add: Boolean, val arguments: List<Argument>)
+data class Chunk(val content: String, val location: Location, val add: Boolean, val arguments: List<Argument>)
 
 
 class ParseException(val position: Position, message: String) : Exception(message)
@@ -22,6 +22,9 @@ fun extractChunks(input: String): Result<Exception, Map<String, List<Chunk>>> {
     var lp = 0
     while (lp < lines.size) {
         if (lines[lp].startsWith("~~~")) {
+            val startLine =
+                    lp
+
             val line =
                     lines[lp].substring(3)
 
@@ -47,15 +50,18 @@ fun extractChunks(input: String): Result<Exception, Map<String, List<Chunk>>> {
                 lp += 1
             }
 
+            val location =
+                    Location(Position(startLine, 0), Position(lp, if (lp < lines.size) lines[lp].length else 0))
+
             val currentChunk =
                     result[parseResult.second.text]
 
             if (currentChunk == null)
                 result[parseResult.second.text] =
-                        listOf(Chunk(content.toString(), parseResult.first, emptyList()))
+                        listOf(Chunk(content.toString(), location, parseResult.first, emptyList()))
             else
                 result[parseResult.second.text] =
-                        currentChunk + Chunk(content.toString(), parseResult.first, emptyList())
+                        currentChunk + Chunk(content.toString(), location, parseResult.first, emptyList())
 
             lp += 1
         } else {
