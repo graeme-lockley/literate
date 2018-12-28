@@ -2,4 +2,4 @@
 
 export PROJECT_ROOT=`dirname $0`/..
 
-java -classpath $PROJECT_ROOT/j8-tools/target/j8-tools-1.0-SNAPSHOT.jar za.co.no9.literate.tools.make.MainKt --javaccp $PROJECT_ROOT/j8-runtime/target/j8-runtime-1.0-SNAPSHOT.jar:$HOME/.sle $*
+java -classpath $PROJECT_ROOT/tools/target/literate-tools-1.0-SNAPSHOT.jar za.co.no9.literate.tools.make.MainKt $*
