@@ -30,4 +30,50 @@ class ProcessChunksTest : StringSpec({
         processChunks(Chunk(content, homeLocation, false, emptyList()), chunks)
                 .shouldBe(Okay<Exception, String>(output))
     }
+
+
+    "Content with a single chunk reference to a multiple chunk without a separator" {
+        val chunks =
+                mapOf(
+                        Pair("Name", listOf(
+                                Chunk("ID1", homeLocation, false, emptyList()),
+                                Chunk("ID2", homeLocation, false, emptyList())
+                        )))
+
+        val content =
+                "Hello world\n" +
+                        "[=Name]\n" +
+                        "Bye bye love"
+
+        val output =
+                "Hello world\n" +
+                        "ID1ID2\n" +
+                        "Bye bye love"
+
+        processChunks(Chunk(content, homeLocation, false, emptyList()), chunks)
+                .shouldBe(Okay<Exception, String>(output))
+    }
+
+
+    "Content with a single chunk reference to a multiple chunk with a separator" {
+        val chunks =
+                mapOf(
+                        Pair("Name", listOf(
+                                Chunk("ID1", homeLocation, false, emptyList()),
+                                Chunk("ID2", homeLocation, false, emptyList())
+                        )))
+
+        val content =
+                "Hello world\n" +
+                        "[=Name separator=\", \"]\n" +
+                        "Bye bye love"
+
+        val output =
+                "Hello world\n" +
+                        "ID1, ID2\n" +
+                        "Bye bye love"
+
+        processChunks(Chunk(content, homeLocation, false, emptyList()), chunks)
+                .shouldBe(Okay<Exception, String>(output))
+    }
 })
