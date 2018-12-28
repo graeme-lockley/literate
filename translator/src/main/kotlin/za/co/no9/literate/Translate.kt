@@ -54,14 +54,14 @@ fun extractChunks(input: String): Result<Exception, Map<String, List<Chunk>>> {
                     Location(Position(startLine, 0), Position(lp, if (lp < lines.size) lines[lp].length else 0))
 
             val currentChunk =
-                    result[parseResult.second.text]
+                    result[parseResult.name]
 
             if (currentChunk == null)
-                result[parseResult.second.text] =
-                        listOf(Chunk(content.toString(), location, parseResult.first, emptyList()))
+                result[parseResult.name] =
+                        listOf(Chunk(content.toString(), location, parseResult.additive, parseResult.arguments))
             else
-                result[parseResult.second.text] =
-                        currentChunk + Chunk(content.toString(), location, parseResult.first, emptyList())
+                result[parseResult.name] =
+                        currentChunk + Chunk(content.toString(), location, parseResult.additive, parseResult.arguments)
 
             lp += 1
         } else {
@@ -72,11 +72,22 @@ fun extractChunks(input: String): Result<Exception, Map<String, List<Chunk>>> {
 }
 
 
+private data class Line(val additive: Boolean, val name: String, val arguments: List<Argument>)
+
+
 /*
     line :==
-        ( '+' )? ID EOF
+        ( '+' )? ID ( argument )* EOF
+
+    argument :==
+        ID '=' value
+
+    value :==
+        ID
+      | CONSTANT_INT
+      | CONSTANT_STRING
  */
-private fun parseLine(lexer: Lexer): Pair<Boolean, Symbol> {
+private fun parseLine(lexer: Lexer): Line {
     val additive =
             if (lexer.token == Token.PLUS) {
                 lexer.next()
@@ -89,8 +100,15 @@ private fun parseLine(lexer: Lexer): Pair<Boolean, Symbol> {
         val id =
                 lexer.next()
 
+        val arguments =
+                mutableListOf<Argument>()
+
+        while (lexer.token == Token.ID) {
+            arguments.add(parseArgument(lexer))
+        }
+
         if (lexer.token == Token.EOF) {
-            Pair(additive, id)
+            Line(additive, id.text, arguments)
         } else {
             throw ParseException(lexer.position(), "Expected EOF")
         }
@@ -98,6 +116,42 @@ private fun parseLine(lexer: Lexer): Pair<Boolean, Symbol> {
         throw ParseException(lexer.position(), "Expected ID")
     }
 }
+
+
+private fun parseArgument(lexer: Lexer): Argument {
+    if (lexer.token == Token.ID) {
+        val id =
+                lexer.next()
+
+        if (lexer.token == Token.EQUAL) {
+            lexer.skip()
+        } else {
+            throw ParseException(lexer.position(), "Expected '='")
+        }
+        val value =
+                parseValue(lexer)
+
+        return Argument(id.text, value)
+    } else {
+        throw ParseException(lexer.position(), "Expected ID")
+    }
+}
+
+
+private fun parseValue(lexer: Lexer): String =
+        when (lexer.token) {
+            Token.ConstantInt ->
+                lexer.next().text
+
+            Token.ConstantString ->
+                lexer.next().text.drop(1).dropLast(1)
+
+            Token.ID ->
+                lexer.next().text
+
+            else ->
+                throw ParseException(lexer.position(), "Expected constant string, constant int or ID")
+        }
 
 
 fun processTemplate(state: Map<String, Any>, template: Template): Result<Exception, String> {

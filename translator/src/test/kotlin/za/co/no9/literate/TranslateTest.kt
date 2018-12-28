@@ -37,6 +37,24 @@ class TranslateTest : StringSpec({
     }
 
 
+    "Content with an additive chunk and parameters" {
+        extractChunks("asdfasdf\n" +
+                "asdfasdf\n" +
+                "~~~ +Name source=\"File.sle\" weave=false tangle=true width=123\n" +
+                "Hello World\n" +
+                "~~~~\n" +
+                "asdfasdfaf")
+                .shouldBe(Okay<Exception, Map<String, List<Chunk>>>(mapOf(
+                        Pair("Name", listOf(Chunk("Hello World", Location(Position(2, 0),  Position(4, 4)), true, listOf(
+                                Argument("source", "File.sle"),
+                                Argument("weave", "false"),
+                                Argument("tangle", "true"),
+                                Argument("width", "123")
+                        ))))
+                )))
+    }
+
+
     "Content with a multiple chunks with different names" {
         extractChunks("asdfasdf\n" +
                 "asdfasdf\n" +

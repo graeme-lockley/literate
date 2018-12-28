@@ -13,6 +13,7 @@ enum class Token {
     ID,
 
     PLUS,
+    EQUAL,
 
     Other
 }
@@ -167,6 +168,9 @@ class Lexer(private val input: String) {
 
                 currentCh == '+' ->
                     markEnd(currentIndex, position(), Token.PLUS)
+
+                currentCh == '=' ->
+                    markEnd(currentIndex, position(), Token.EQUAL)
 
                 else ->
                     markEnd(currentIndex, position(), Token.Other)
