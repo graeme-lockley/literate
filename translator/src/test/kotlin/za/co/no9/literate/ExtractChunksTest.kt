@@ -4,7 +4,7 @@ import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
 
 
-class TranslateTest : StringSpec({
+class ExtractChunksTest : StringSpec({
     "Content without any chunks" {
         extractChunks("")
                 .shouldBe(Okay<Exception, Map<String, List<Chunk>>>(emptyMap()))
