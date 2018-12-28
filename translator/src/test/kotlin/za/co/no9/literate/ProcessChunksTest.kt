@@ -1,6 +1,7 @@
 package za.co.no9.literate
 
 import io.kotlintest.shouldBe
+import io.kotlintest.shouldThrow
 import io.kotlintest.specs.StringSpec
 
 
@@ -75,5 +76,22 @@ class ProcessChunksTest : StringSpec({
 
         processChunks(Chunk(content, homeLocation, false, emptyList()), chunks)
                 .shouldBe(Okay<Exception, String>(output))
+    }
+
+
+    "Content with a reference to an unknown chunk" {
+        val chunks =
+                mapOf(
+                        Pair("Name", listOf(
+                                Chunk("this is the chunk text", homeLocation, false, emptyList()))))
+
+        val content =
+                "Hello world\n" +
+                        "[=Named]\n" +
+                        "Bye bye love"
+
+        shouldThrow<ProcessException> {
+            processChunks(Chunk(content, homeLocation, false, emptyList()), chunks)
+        }.message.shouldBe("Reference to unknown chunk Named")
     }
 })
