@@ -24,6 +24,19 @@ class TranslateTest : StringSpec({
     }
 
 
+    "Content with an additive chunk" {
+        extractChunks("asdfasdf\n" +
+                "asdfasdf\n" +
+                "~~~ +Name\n" +
+                "Hello World\n" +
+                "~~~~\n" +
+                "asdfasdfaf")
+                .shouldBe(Okay<Exception, Map<String, List<Chunk>>>(mapOf(
+                        Pair("Name", listOf(Chunk("Hello World", true, emptyList())))
+                )))
+    }
+
+
     "Content with a multiple chunks with different names" {
         extractChunks("asdfasdf\n" +
                 "asdfasdf\n" +

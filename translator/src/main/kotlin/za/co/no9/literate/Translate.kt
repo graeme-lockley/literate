@@ -48,14 +48,14 @@ fun extractChunks(input: String): Result<Exception, Map<String, List<Chunk>>> {
             }
 
             val currentChunk =
-                    result[parseResult.text]
+                    result[parseResult.second.text]
 
             if (currentChunk == null)
-                result[parseResult.text] =
-                        listOf(Chunk(content.toString(), false, emptyList()))
+                result[parseResult.second.text] =
+                        listOf(Chunk(content.toString(), parseResult.first, emptyList()))
             else
-                result[parseResult.text] =
-                        currentChunk + Chunk(content.toString(), false, emptyList())
+                result[parseResult.second.text] =
+                        currentChunk + Chunk(content.toString(), parseResult.first, emptyList())
 
             lp += 1
         } else {
@@ -68,21 +68,30 @@ fun extractChunks(input: String): Result<Exception, Map<String, List<Chunk>>> {
 
 /*
     line :==
-        ID EOF
+        ( '+' )? ID EOF
  */
-private fun parseLine(lexer: Lexer): Symbol =
-        if (lexer.token == Token.ID) {
-            val id =
-                    lexer.next()
-
-            if (lexer.token == Token.EOF) {
-                id
+private fun parseLine(lexer: Lexer): Pair<Boolean, Symbol> {
+    val additive =
+            if (lexer.token == Token.PLUS) {
+                lexer.next()
+                true
             } else {
-                throw ParseException(lexer.position(), "Expected EOF")
+                false
             }
+
+    return if (lexer.token == Token.ID) {
+        val id =
+                lexer.next()
+
+        if (lexer.token == Token.EOF) {
+            Pair(additive, id)
         } else {
-            throw ParseException(lexer.position(), "Expected ID")
+            throw ParseException(lexer.position(), "Expected EOF")
         }
+    } else {
+        throw ParseException(lexer.position(), "Expected ID")
+    }
+}
 
 
 fun processTemplate(state: Map<String, Any>, template: Template): Result<Exception, String> {
