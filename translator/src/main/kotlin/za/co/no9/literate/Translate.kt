@@ -6,33 +6,45 @@ import java.io.StringWriter
 
 data class Argument(val name: String, val value: String)
 
-data class Chunk(val content: String, val add: Boolean, val arguments: List<Argument>)
-
-
 class ParseException(val position: Position, message: String) : Exception(message)
 
 class ProcessException(message: String) : java.lang.Exception(message)
 
 
 typealias Chunks =
-        Map<String, List<Chunk>>
+        Map<String, List<ChunkLine>>
 
 
-data class TranslateResult(val markdown: String, val items: List<Pair<String, String>>)
+data class TranslateResult(val markdown: String, val items: List<Pair<String, String>>) {
+    fun addItem(key: String, value: String): TranslateResult =
+            TranslateResult(markdown, items + Pair(key, value))
+}
 
 
-//fun translate(lines: List<String>): Result<Exception, TranslateResult> {
-//    return parse(lines)
-//            .andThen { alines ->
-//                extractChunks(alines)
-//                        .andThen { chunks ->
-//
-//                        }
-//            }
-//}
+fun translate(input: String): Result<Exception, TranslateResult> =
+        parse(input.lines())
+                .andThen { listOfLines ->
+                    extractChunks(listOfLines)
+                            .andThen { chunks ->
+                                val initialValue: Result<Exception, TranslateResult> =
+                                        Okay(TranslateResult(input, emptyList()))
+
+                                listOfLines.foldLeft(initialValue) { result, line ->
+                                    if (line is ChunkLine && line.hasArgument("file")) {
+                                        result.andThen { translationResult ->
+                                            processChunks(line, chunks)
+                                                    .map { value ->
+                                                        translationResult.addItem(line.argumentValue("file")!!, value)
+                                                    }
+                                        }
+                                    } else
+                                        result
+                                }
+                            }
+                }
 
 
-fun processChunks(chunk: Chunk, chunks: Chunks): Result<Exception, String> {
+fun processChunks(chunk: ChunkLine, chunks: Chunks): Result<Exception, String> {
     var text =
             chunk.content
 
@@ -84,7 +96,7 @@ fun extractChunks(root: ConsList<Line>): Result<Exception, Chunks> =
             when (line) {
                 is ChunkLine ->
                     result + Pair(line.name, (result[line.name]
-                            ?: emptyList()) + Chunk(line.content, line.additive, line.arguments))
+                            ?: emptyList()) + line)
 
                 else ->
                     result
@@ -130,7 +142,7 @@ fun parse(lines: List<String>): Result<Exception, ConsList<Line>> {
                 lp += 1
             }
 
-            root = root.append(ChunkLine(content.toString(), parseLineResult.name, parseLineResult.additive, parseLineResult.arguments, startLineNumber, lp))
+            root = root.append(ChunkLine(content.toString(), parseLineResult.name, parseLineResult.additive, parseLineResult.arguments, startLineNumber, lp - 1))
 
             lp += 1
         } else {

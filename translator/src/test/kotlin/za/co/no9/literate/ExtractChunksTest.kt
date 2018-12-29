@@ -4,10 +4,10 @@ import io.kotlintest.shouldBe
 import io.kotlintest.specs.StringSpec
 
 
-class ExtractChunksTest : StringSpec({
+class ExtractChunkLinesTest : StringSpec({
     "Content without any chunks" {
         extractChunks("")
-                .shouldBe(Okay<Exception, Map<String, List<Chunk>>>(emptyMap()))
+                .shouldBe(Okay<Exception, Map<String, List<ChunkLine>>>(emptyMap()))
     }
 
 
@@ -18,8 +18,8 @@ class ExtractChunksTest : StringSpec({
                 "Hello World\n" +
                 "~~~~\n" +
                 "asdfasdfaf")
-                .shouldBe(Okay<Exception, Map<String, List<Chunk>>>(mapOf(
-                        Pair("Name", listOf(Chunk("Hello World", false, emptyList())))
+                .shouldBe(Okay<Exception, Map<String, List<ChunkLine>>>(mapOf(
+                        Pair("Name", listOf(ChunkLine("Hello World", "Name", false, emptyList(), 3, 3)))
                 )))
     }
 
@@ -31,8 +31,8 @@ class ExtractChunksTest : StringSpec({
                 "Hello World\n" +
                 "~~~~\n" +
                 "asdfasdfaf")
-                .shouldBe(Okay<Exception, Map<String, List<Chunk>>>(mapOf(
-                        Pair("Name", listOf(Chunk("Hello World", true, emptyList())))
+                .shouldBe(Okay<Exception, Map<String, List<ChunkLine>>>(mapOf(
+                        Pair("Name", listOf(ChunkLine("Hello World", "Name", true, emptyList(), 3, 3)))
                 )))
     }
 
@@ -44,13 +44,13 @@ class ExtractChunksTest : StringSpec({
                 "Hello World\n" +
                 "~~~~\n" +
                 "asdfasdfaf")
-                .shouldBe(Okay<Exception, Map<String, List<Chunk>>>(mapOf(
-                        Pair("Name", listOf(Chunk("Hello World", true, listOf(
+                .shouldBe(Okay<Exception, Map<String, List<ChunkLine>>>(mapOf(
+                        Pair("Name", listOf(ChunkLine("Hello World", "Name", true, listOf(
                                 Argument("source", "File.sle"),
                                 Argument("weave", "false"),
                                 Argument("tangle", "true"),
                                 Argument("width", "123")
-                        ))))
+                        ), 3, 3)))
                 )))
     }
 
@@ -66,9 +66,9 @@ class ExtractChunksTest : StringSpec({
                 "Bye bye love\n" +
                 "~~~~\n" +
                 "asdfasdfaf")
-                .shouldBe(Okay<Exception, Map<String, List<Chunk>>>(mapOf(
-                        Pair("NameA", listOf(Chunk("Hello World", false, emptyList()))),
-                        Pair("NameB", listOf(Chunk("Bye bye love", false, emptyList())))
+                .shouldBe(Okay<Exception, Map<String, List<ChunkLine>>>(mapOf(
+                        Pair("NameA", listOf(ChunkLine("Hello World", "NameA", false, emptyList(), 3, 3))),
+                        Pair("NameB", listOf(ChunkLine("Bye bye love", "NameB", false, emptyList(), 7, 7)))
                 )))
     }
 
@@ -84,10 +84,10 @@ class ExtractChunksTest : StringSpec({
                 "Bye bye love\n" +
                 "~~~~\n" +
                 "asdfasdfaf")
-                .shouldBe(Okay<Exception, Map<String, List<Chunk>>>(mapOf(
+                .shouldBe(Okay<Exception, Map<String, List<ChunkLine>>>(mapOf(
                         Pair("Name", listOf(
-                                Chunk("Hello World", false, emptyList()),
-                                Chunk("Bye bye love", false, emptyList())))
+                                ChunkLine("Hello World", "Name", false, emptyList(), 3, 3),
+                                ChunkLine("Bye bye love", "Name", false, emptyList(), 7, 7)))
                 )))
     }
 })
