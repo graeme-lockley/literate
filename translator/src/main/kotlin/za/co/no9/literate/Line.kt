@@ -21,3 +21,7 @@ data class ChunkLine(
     fun argumentValue(name: String): String? =
             arguments.firstOrNull { it.name == name }?.value
 }
+
+
+data class Argument(val name: String, val value: String)
+

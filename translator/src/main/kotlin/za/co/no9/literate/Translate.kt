@@ -4,8 +4,6 @@ import freemarker.template.Template
 import java.io.StringWriter
 
 
-data class Argument(val name: String, val value: String)
-
 class ParseException(val position: Position, message: String) : Exception(message)
 
 class ProcessException(message: String) : java.lang.Exception(message)
