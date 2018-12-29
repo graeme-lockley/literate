@@ -26,12 +26,12 @@ class Nil<X> : ConsList<X>() {
 }
 
 
-abstract class ALine(open val content: String)
+abstract class Line(open val content: String)
 
 
 class TextLine(
         override val content: String,
-        val lineNumber: Int) : ALine(content)
+        val lineNumber: Int) : Line(content)
 
 class ChunkLine(
         override val content: String,
@@ -39,4 +39,4 @@ class ChunkLine(
         val additive: Boolean,
         val arguments: List<Argument>,
         val startLineNumber: Int,
-        val endLineNumber: Int) : ALine(content)
+        val endLineNumber: Int) : Line(content)

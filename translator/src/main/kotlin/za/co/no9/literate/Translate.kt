@@ -79,7 +79,7 @@ fun extractChunks(lines: List<String>): Result<Exception, Chunks> =
                 .andThen { extractChunks(it) }
 
 
-fun extractChunks(root: ConsList<ALine>): Result<Exception, Chunks> =
+fun extractChunks(root: ConsList<Line>): Result<Exception, Chunks> =
         Okay(root.foldLeft(mapOf()) { result, line ->
             when (line) {
                 is ChunkLine ->
@@ -92,8 +92,8 @@ fun extractChunks(root: ConsList<ALine>): Result<Exception, Chunks> =
         })
 
 
-fun parse(lines: List<String>): Result<Exception, ConsList<ALine>> {
-    var root: ConsList<ALine> =
+fun parse(lines: List<String>): Result<Exception, ConsList<Line>> {
+    var root: ConsList<Line> =
             Nil()
 
     var lp =
@@ -107,7 +107,7 @@ fun parse(lines: List<String>): Result<Exception, ConsList<ALine>> {
             val lexer =
                     Lexer(line)
 
-            val parseResult =
+            val parseLineResult =
                     try {
                         parseLine(lexer)
                     } catch (e: ParseException) {
@@ -130,7 +130,7 @@ fun parse(lines: List<String>): Result<Exception, ConsList<ALine>> {
                 lp += 1
             }
 
-            root = root.append(ChunkLine(content.toString(), parseResult.name, parseResult.additive, parseResult.arguments, startLineNumber, lp))
+            root = root.append(ChunkLine(content.toString(), parseLineResult.name, parseLineResult.additive, parseLineResult.arguments, startLineNumber, lp))
 
             lp += 1
         } else {
@@ -143,7 +143,7 @@ fun parse(lines: List<String>): Result<Exception, ConsList<ALine>> {
 }
 
 
-data class Line(val additive: Boolean, val name: String, val arguments: List<Argument>)
+data class ParseLineResult(val additive: Boolean, val name: String, val arguments: List<Argument>)
 
 
 /*
@@ -158,7 +158,7 @@ data class Line(val additive: Boolean, val name: String, val arguments: List<Arg
       | CONSTANT_INT
       | CONSTANT_STRING
  */
-private fun parseLine(lexer: Lexer): Line {
+private fun parseLine(lexer: Lexer): ParseLineResult {
     val additive =
             if (lexer.token == Token.PLUS) {
                 lexer.next()
@@ -179,7 +179,7 @@ private fun parseLine(lexer: Lexer): Line {
         }
 
         if (lexer.token == Token.EOF) {
-            Line(additive, id.text, arguments)
+            ParseLineResult(additive, id.text, arguments)
         } else {
             throw ParseException(lexer.position(), "Expected EOF")
         }
