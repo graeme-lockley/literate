@@ -11,21 +11,18 @@ abstract class ConsList<X> {
                     z
             }
 
-    fun append(element: X): ConsList<X> =
-            this.appendElement(element)
-
-    abstract fun appendElement(element: X): ConsList<X>
+    abstract fun append(element: X): ConsList<X>
 }
 
 
 class Cons<X>(val car: X, val cdr: ConsList<X>) : ConsList<X>() {
-    override fun appendElement(element: X): ConsList<X> =
-            Cons(car, cdr.appendElement(element))
+    override fun append(element: X): ConsList<X> =
+            Cons(car, cdr.append(element))
 }
 
 
 class Nil<X> : ConsList<X>() {
-    override fun appendElement(element: X): ConsList<X> =
+    override fun append(element: X): ConsList<X> =
             Cons(element, this)
 }
 
