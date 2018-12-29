@@ -15,13 +15,28 @@ import java.util.*
 
 interface Listener {
     fun processedTemplate(output: String)
+    fun markdownOutput(markdown: String)
+    fun sourceOutput(first: String, second: String)
 }
 
 
-class MyListener(val log: Log, val showProcessedOutput: Boolean) : Listener {
+class MyListener(val log: Log, val showProcessedOutput: Boolean, val showMarkdown: Boolean, val showOutput: Boolean) : Listener {
     override fun processedTemplate(output: String) {
         if (showProcessedOutput) {
             log.info(output)
+        }
+    }
+
+    override fun markdownOutput(markdown: String) {
+        if (showMarkdown) {
+            log.info(markdown)
+        }
+    }
+
+    override fun sourceOutput(first: String, second: String) {
+        if (showOutput) {
+            log.info("file name: $first")
+            log.info(second)
         }
     }
 }
@@ -43,10 +58,21 @@ class Arguments(parser: ArgParser) {
             .flagging("enable verbose mode")
             .default(false)
 
+    val template by parser
+            .flagging("enable verbose template output only")
+            .default(false)
+
+    val markdown by parser
+            .flagging("enable verbose markdown output only")
+            .default(false)
+
+    val output by parser
+            .flagging("enable verbose file output only")
+            .default(false)
+
     val target by parser
             .storing("-T", "--target", help = "target directory of compiled code")
             .default(".")
-
 
     val source by parser
             .storing("-S", "--source", help = "source directory of files to compile")
@@ -62,10 +88,10 @@ fun main(args: Array<String>): Unit =
             val log =
                     MyLog()
 
-            val listener =
-                    MyListener(log, false)
-
             parsedArgs.run {
+                val listener =
+                        MyListener(log, template, markdown, output)
+
                 build(listener, source, target, verbose)
             }
         }
@@ -121,10 +147,10 @@ fun build(listener: Listener, configuration: Configuration, source: File, target
 
     translateOutput
             .andThen { x ->
-                // listener.markdownOutput(x.markdown)
+                listener.markdownOutput(x.markdown)
                 File(source.nameWithoutExtension + ".md").writeText(x.markdown)
                 x.items.forEach { p ->
-                    // listener.sourceOutput(p.first, p.second)
+                    listener.sourceOutput(p.first, p.second)
                     File(source.parentFile, p.first).writeText(p.second)
                 }
                 Okay<Exception, TranslateResult>(x)
