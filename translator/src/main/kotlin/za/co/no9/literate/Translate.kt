@@ -21,6 +21,17 @@ typealias Chunks =
 data class TranslateResult(val markdown: String, val items: List<Pair<String, String>>)
 
 
+//fun translate(lines: List<String>): Result<Exception, TranslateResult> {
+//    return parse(lines)
+//            .andThen { alines ->
+//                extractChunks(alines)
+//                        .andThen { chunks ->
+//
+//                        }
+//            }
+//}
+
+
 fun processChunks(chunk: Chunk, chunks: Chunks): Result<Exception, String> {
     var text =
             chunk.content
@@ -65,55 +76,25 @@ fun extractChunks(input: String) =
 
 fun extractChunks(lines: List<String>): Result<Exception, Chunks> =
         parse(lines)
-                .map { root ->
-                    val result =
-                            mutableMapOf<String, List<Chunk>>()
+                .andThen { extractChunks(it) }
 
-                    var current: ALine? =
-                            root
 
-                    while (current != null) {
+fun extractChunks(root: ConsList<ALine>): Result<Exception, Chunks> =
+        Okay(root.foldLeft(mapOf()) { result, line ->
+            when (line) {
+                is ChunkLine ->
+                    result + Pair(line.name, (result[line.name]
+                            ?: emptyList()) + Chunk(line.content, line.additive, line.arguments))
 
-                        if (current is ChunkLine) {
-                            val currentChunk =
-                                    result[current.name]
-
-                            if (currentChunk == null)
-                                result[current.name] =
-                                        listOf(Chunk(current.content, current.additive, current.arguments))
-                            else
-                                result[current.name] =
-                                        currentChunk + Chunk(current.content, current.additive, current.arguments)
-
-                        }
-
-                        current = current.next
-                    }
-
+                else ->
                     result
-                }
+            }
+        })
 
 
-fun parse(lines: List<String>): Result<Exception, ALine> {
-    var root: ALine? =
-            null
-
-    var current: ALine? =
-            null
-
-
-    fun addLine(line: ALine) {
-        if (root == null) {
-            root = line
-        }
-        if (current == null) {
-            current = null
-        } else {
-            current!!.next = line
-        }
-        current = line
-    }
-
+fun parse(lines: List<String>): Result<Exception, ConsList<ALine>> {
+    var root: ConsList<ALine> =
+            Nil()
 
     var lp =
             0
@@ -149,16 +130,16 @@ fun parse(lines: List<String>): Result<Exception, ALine> {
                 lp += 1
             }
 
-            addLine(ChunkLine(null, content.toString(), parseResult.name, parseResult.additive, parseResult.arguments, startLineNumber, lp))
+            root = root.append(ChunkLine(content.toString(), parseResult.name, parseResult.additive, parseResult.arguments, startLineNumber, lp))
 
             lp += 1
         } else {
-            addLine(TextLine(null, lines[lp], lp))
+            root = root.append(TextLine(lines[lp], lp))
             lp += 1
         }
     }
 
-    return Okay(root!!)
+    return Okay(root)
 }
 
 
