@@ -4,7 +4,10 @@ import com.xenomachina.argparser.ArgParser
 import com.xenomachina.argparser.default
 import com.xenomachina.argparser.mainBody
 import freemarker.template.Configuration
+import za.co.no9.literate.Okay
+import za.co.no9.literate.TranslateResult
 import za.co.no9.literate.configure
+import za.co.no9.literate.translate
 import java.io.File
 import java.io.StringWriter
 import java.util.*
@@ -15,7 +18,7 @@ interface Listener {
 }
 
 
-class MyListener(val log: Log, val showProcessedOutput: Boolean):Listener {
+class MyListener(val log: Log, val showProcessedOutput: Boolean) : Listener {
     override fun processedTemplate(output: String) {
         if (showProcessedOutput) {
             log.info(output)
@@ -24,7 +27,7 @@ class MyListener(val log: Log, val showProcessedOutput: Boolean):Listener {
 }
 
 
-class MyLog: Log {
+class MyLog : Log {
     override fun error(message: String) {
         System.err.println("Error: $message")
     }
@@ -60,7 +63,7 @@ fun main(args: Array<String>): Unit =
                     MyLog()
 
             val listener =
-                    MyListener(log, true)
+                    MyListener(log, false)
 
             parsedArgs.run {
                 build(listener, source, target, verbose)
@@ -113,8 +116,18 @@ fun build(listener: Listener, configuration: Configuration, source: File, target
 
     listener.processedTemplate(output)
 
-//    extractChunks(output)
-//            .andThen { chunks ->
-//
-//            }
+    val translateOutput =
+            translate(output)
+
+    translateOutput
+            .andThen { x ->
+                // listener.markdownOutput(x.markdown)
+                File(source.nameWithoutExtension + ".md").writeText(x.markdown)
+                x.items.forEach { p ->
+                    // listener.sourceOutput(p.first, p.second)
+                    File(source.parentFile, p.first).writeText(p.second)
+                }
+                Okay<Exception, TranslateResult>(x)
+            }
+
 }
