@@ -25,7 +25,7 @@ fun translate(input: String): Result<Exception, TranslateResult> =
                     extractChunks(listOfLines)
                             .andThen { chunks ->
                                 val initialValue: Result<Exception, TranslateResult> =
-                                        Okay(TranslateResult(input, emptyList()))
+                                        Okay(TranslateResult(createMarkdown(listOfLines), emptyList()))
 
                                 listOfLines.foldLeft(initialValue) { result, line ->
                                     if (line is ChunkLine && line.hasArgument("file")) {
@@ -40,6 +40,33 @@ fun translate(input: String): Result<Exception, TranslateResult> =
                                 }
                             }
                 }
+
+
+private fun createMarkdown(lines: ConsList<Line>): String {
+    val builder =
+            StringBuilder()
+
+    return lines.foldLeft(builder) { a, b ->
+        when (b) {
+            is TextLine ->
+                builder
+                        .append(b.content)
+                        .append("\n")
+
+            is ChunkLine ->
+                if (b.argumentValue("weave") ?: "True" == "True") {
+                    builder
+                            .append("~~~ haskell\n")
+                            .append(b.content)
+                            .append("\n")
+                            .append("~~~\n")
+                } else
+                    builder
+            else ->
+                builder
+        }
+    }.toString()
+}
 
 
 fun processChunks(chunk: ChunkLine, chunks: Chunks): Result<Exception, String> {
