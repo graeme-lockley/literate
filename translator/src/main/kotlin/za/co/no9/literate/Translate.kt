@@ -252,7 +252,11 @@ private fun parseValue(lexer: Lexer): String =
                 lexer.next().text
 
             Token.ConstantString ->
-                lexer.next().text.drop(1).dropLast(1)
+                lexer.next().text
+                        .drop(1)
+                        .dropLast(1)
+                        .replace("\\n", "\n")
+                        .replace("\\\\", "\\")
 
             Token.ID ->
                 lexer.next().text
