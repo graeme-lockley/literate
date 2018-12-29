@@ -2,26 +2,25 @@ package za.co.no9.literate
 
 
 abstract class ConsList<X> {
-    fun <R> foldLeft(z: R, f: (R, X) -> R): R =
-            when {
-                this is Cons<X> ->
-                    this.cdr.foldLeft(f(z, this.car), f)
-
-                else ->
-                    z
-            }
+    abstract fun <R> foldLeft(z: R, f: (R, X) -> R): R
 
     abstract fun append(element: X): ConsList<X>
 }
 
 
 class Cons<X>(val car: X, val cdr: ConsList<X>) : ConsList<X>() {
+    override fun <R> foldLeft(z: R, f: (R, X) -> R): R =
+            this.cdr.foldLeft(f(z, this.car), f)
+
     override fun append(element: X): ConsList<X> =
             Cons(car, cdr.append(element))
 }
 
 
 class Nil<X> : ConsList<X>() {
+    override fun <R> foldLeft(z: R, f: (R, X) -> R): R =
+            z
+
     override fun append(element: X): ConsList<X> =
             Cons(element, this)
 }
