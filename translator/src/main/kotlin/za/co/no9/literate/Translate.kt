@@ -27,7 +27,7 @@ fun translate(input: String): Result<Exception, TranslateResult> =
                                 val initialValue: Result<Exception, TranslateResult> =
                                         Okay(TranslateResult(createMarkdown(listOfLines), emptyList()))
 
-                                listOfLines.foldLeft(initialValue) { result, line ->
+                                listOfLines.fold(initialValue) { result, line ->
                                     if (line is ChunkLine && line.hasArgument("file")) {
                                         result.andThen { translationResult ->
                                             processChunks(line, chunks)
@@ -42,31 +42,24 @@ fun translate(input: String): Result<Exception, TranslateResult> =
                 }
 
 
-private fun createMarkdown(lines: ConsList<Line>): String {
-    val builder =
-            StringBuilder()
+private fun createMarkdown(lines: List<Line>): String =
+        lines.joinToString("\n") { b ->
+            when (b) {
+                is TextLine ->
+                    b.content
 
-    return lines.foldLeft(builder) { a, b ->
-        when (b) {
-            is TextLine ->
-                builder
-                        .append(b.content)
-                        .append("\n")
-
-            is ChunkLine ->
-                if (b.argumentValue("weave") ?: "True" == "True") {
-                    builder
-                            .append("~~~ haskell\n")
-                            .append(b.content)
-                            .append("\n")
-                            .append("~~~\n")
-                } else
-                    builder
-            else ->
-                builder
+                is ChunkLine ->
+                    if (b.argumentValue("weave") ?: "True" == "True") {
+                        "~~~ haskell\n" +
+                                b.content +
+                                "\n" +
+                                "~~~"
+                    } else
+                        ""
+                else ->
+                    ""
+            }
         }
-    }.toString()
-}
 
 
 fun processChunks(chunk: ChunkLine, chunks: Chunks): Result<Exception, String> {
@@ -108,16 +101,12 @@ fun processChunks(chunk: ChunkLine, chunks: Chunks): Result<Exception, String> {
 
 
 fun extractChunks(input: String) =
-        extractChunks(input.lines())
-
-
-fun extractChunks(lines: List<String>): Result<Exception, Chunks> =
-        parse(lines)
+        parse(input.lines())
                 .andThen { extractChunks(it) }
 
 
-fun extractChunks(root: ConsList<Line>): Result<Exception, Chunks> =
-        Okay(root.foldLeft(mapOf()) { result, line ->
+fun extractChunks(root: List<Line>): Result<Exception, Chunks> =
+        Okay(root.fold(mapOf()) { result, line ->
             when (line) {
                 is ChunkLine ->
                     result + Pair(line.name, (result[line.name]
@@ -129,9 +118,9 @@ fun extractChunks(root: ConsList<Line>): Result<Exception, Chunks> =
         })
 
 
-fun parse(lines: List<String>): Result<Exception, ConsList<Line>> {
-    var root: ConsList<Line> =
-            Nil()
+fun parse(lines: List<String>): Result<Exception, List<Line>> {
+    val result =
+            mutableListOf<Line>()
 
     var lp =
             0
@@ -167,16 +156,16 @@ fun parse(lines: List<String>): Result<Exception, ConsList<Line>> {
                 lp += 1
             }
 
-            root = root.append(ChunkLine(content.toString(), parseLineResult.name, parseLineResult.additive, parseLineResult.arguments, startLineNumber, lp - 1))
+            result.add(ChunkLine(content.toString(), parseLineResult.name, parseLineResult.additive, parseLineResult.arguments, startLineNumber, lp - 1))
 
             lp += 1
         } else {
-            root = root.append(TextLine(lines[lp], lp))
+            result.add(TextLine(lines[lp], lp))
             lp += 1
         }
     }
 
-    return Okay(root)
+    return Okay(result)
 }
 
 
